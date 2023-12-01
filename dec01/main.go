@@ -9,22 +9,18 @@ import (
 )
 
 func parseInput() []string {
-	raw, err := os.ReadFile(os.Args[1])
-	if err != nil {
-		panic(err)
-	}
-
+	raw, _ := os.ReadFile(os.Args[1])
 	return strings.Split(strings.Trim(string(raw), "\n"), "\n")
 }
 
 func part1(input []string) int {
-	var digits []string
+	var sum int
 
 	for _, line := range input {
 		var f, l string
-		for i := 0; i < len(line); i++ {
-			if unicode.IsDigit(rune(line[i])) {
-				f = string(line[i])
+		for _, c := range line {
+			if unicode.IsDigit(c) {
+				f = string(c)
 				break
 			}
 		}
@@ -36,20 +32,15 @@ func part1(input []string) int {
 
 		}
 
-		digits = append(digits, f+l)
-	}
-
-	sum := 0
-
-	for _, v := range digits {
-		i, _ := strconv.Atoi(v)
-		sum += i
+		n, _ := strconv.Atoi(f + l)
+		sum += n
 	}
 
 	return sum
 }
 
 func part2(input []string) int {
+	var sum int
 
 	nmap := map[string]string{
 		"one":   "1",
@@ -63,16 +54,14 @@ func part2(input []string) int {
 		"nine":  "9",
 	}
 
-	var digits []string
-
 	for _, line := range input {
 
 		var f, l string
 	FIRST:
-		for i := 0; i < len(line); i++ {
+		for i, c := range line {
 			// check if digit
-			if unicode.IsDigit(rune(line[i])) {
-				f = string(line[i])
+			if unicode.IsDigit(c) {
+				f = string(c)
 				break
 			}
 
@@ -100,18 +89,12 @@ func part2(input []string) int {
 			}
 		}
 
-		digits = append(digits, f+l)
-	}
+		n, _ := strconv.Atoi(f + l)
+		sum += n
 
-	sum := 0
-
-	for _, v := range digits {
-		i, _ := strconv.Atoi(v)
-		sum += i
 	}
 
 	return sum
-
 }
 
 func main() {
