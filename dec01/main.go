@@ -18,7 +18,7 @@ func parseInput() []string {
 }
 
 func part1(lines []string) int {
-	var out []string
+	var digits []string
 
 	for _, line := range lines {
 		var f, l string
@@ -36,12 +36,12 @@ func part1(lines []string) int {
 
 		}
 
-		out = append(out, f+l)
+		digits = append(digits, f+l)
 	}
 
 	sum := 0
 
-	for _, v := range out {
+	for _, v := range digits {
 		i, _ := strconv.Atoi(v)
 		sum += i
 	}
