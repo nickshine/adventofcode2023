@@ -17,10 +17,10 @@ func parseInput() []string {
 	return strings.Split(strings.Trim(string(raw), "\n"), "\n")
 }
 
-func part1(lines []string) int {
+func part1(input []string) int {
 	var digits []string
 
-	for _, line := range lines {
+	for _, line := range input {
 		var f, l string
 		for i := 0; i < len(line); i++ {
 			if unicode.IsDigit(rune(line[i])) {
@@ -49,7 +49,7 @@ func part1(lines []string) int {
 	return sum
 }
 
-func part2(lines []string) int {
+func part2(input []string) int {
 
 	nmap := map[string]string{
 		"one":   "1",
@@ -65,7 +65,7 @@ func part2(lines []string) int {
 
 	var digits []string
 
-	for _, line := range lines {
+	for _, line := range input {
 
 		var f, l string
 	FIRST:
