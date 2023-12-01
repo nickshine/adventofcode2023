@@ -85,7 +85,7 @@ func part2(lines []string) int {
 			}
 		}
 
-	SECOND:
+	LAST:
 		for i := len(line) - 1; i >= 0; i-- {
 			if unicode.IsDigit(rune(line[i])) {
 				l = string(line[i])
@@ -95,7 +95,7 @@ func part2(lines []string) int {
 			for k, v := range nmap {
 				if strings.HasSuffix(line[:i+1], k) {
 					l = v
-					break SECOND
+					break LAST
 				}
 			}
 		}
