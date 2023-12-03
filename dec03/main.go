@@ -17,7 +17,7 @@ type point struct {
 	x, y int
 }
 
-func parseMap(input []string) (numbers, symbols map[point]string) {
+func parseMap(input []string) (numbers, symbols map[point]string, bounds point) {
 
 	// a mapping of coordinates to numbers/symbols
 	numbers = make(map[point]string)
@@ -50,26 +50,35 @@ func parseMap(input []string) (numbers, symbols map[point]string) {
 		}
 	}
 
-	return numbers, symbols
+	return numbers, symbols, point{len(input[0]), len(input)}
 }
 
-func adjacents(p point, numLength int) []point {
-	adjacent := []point{
-		{p.x - 1, p.y},         // left
-		{p.x + numLength, p.y}, // right
+func adjacents(p, bounds point, numLength int) []point {
+	var a []point
+
+	if p.x-1 >= 0 {
+		a = append(a, point{p.x - 1, p.y}) // left
+	}
+
+	if p.x+numLength < bounds.x {
+		a = append(a, point{p.x + numLength, p.y}) // right
 	}
 	// add up/down xrange
 	for x := p.x - 1; x <= p.x+numLength; x++ {
-		adjacent = append(adjacent, point{x, p.y - 1}) // up
-		adjacent = append(adjacent, point{x, p.y + 1}) // down
+		if p.y-1 >= 0 {
+			a = append(a, point{x, p.y - 1}) // up
+		}
+		if p.y+1 < bounds.y {
+			a = append(a, point{x, p.y + 1}) // down
+		}
 	}
 
-	return adjacent
+	return a
 }
 
 func part1(input []string) int {
 
-	numbers, symbols := parseMap(input)
+	numbers, symbols, bounds := parseMap(input)
 
 	var sum int
 
@@ -77,7 +86,7 @@ func part1(input []string) int {
 
 		num, _ := strconv.Atoi(v)
 
-		for _, a := range adjacents(p, len(v)) {
+		for _, a := range adjacents(p, bounds, len(v)) {
 			// if adjacent to a symbol
 			if _, ok := symbols[a]; ok {
 				sum += num
@@ -90,7 +99,7 @@ func part1(input []string) int {
 }
 
 func part2(input []string) int {
-	numbers, symbols := parseMap(input)
+	numbers, symbols, bounds := parseMap(input)
 
 	// map of gears to adjacent numbers
 	gears := make(map[point][]int)
@@ -99,7 +108,7 @@ func part2(input []string) int {
 
 		num, _ := strconv.Atoi(v)
 
-		for _, a := range adjacents(p, len(v)) {
+		for _, a := range adjacents(p, bounds, len(v)) {
 			// if adjacent to a symbol
 			if s, ok := symbols[a]; ok && s == "*" {
 				gears[a] = append(gears[a], num)
