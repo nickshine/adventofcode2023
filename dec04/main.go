@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -18,21 +19,19 @@ type card struct {
 	id      int
 }
 
-func parseCard(in string) card {
+var re = regexp.MustCompile(`^Card +(\d+): +(.+) +\| +(.+)$`)
 
+func parseCard(in string) card {
 	c := card{
 		winning: make(map[int]struct{}),
 		have:    nil,
 	}
 
-	ss := strings.Split(in, ":")
-	idstring := strings.Fields(ss[0])[1]
-	numstring := strings.TrimSpace(ss[1])
-	liststrings := strings.Split(numstring, "|")
-	winning := strings.Fields(liststrings[0])
-	have := strings.Fields(liststrings[1])
+	parts := re.FindStringSubmatch(in)
 
-	c.id, _ = strconv.Atoi(idstring)
+	c.id, _ = strconv.Atoi(parts[1])
+	winning := strings.Fields(parts[2])
+	have := strings.Fields(parts[3])
 
 	for _, n := range winning {
 		rn, _ := strconv.Atoi(n)
@@ -45,7 +44,6 @@ func parseCard(in string) card {
 	}
 
 	return c
-
 }
 
 func part1(input []string) int {
