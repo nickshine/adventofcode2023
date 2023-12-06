@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -49,7 +50,7 @@ func part1(input []string) int {
 
 	races := parse(input)
 
-	total := 0
+	total := 1
 	for _, race := range races {
 		wins := 0
 		for i := 1; i < race.time; i++ {
@@ -58,11 +59,7 @@ func part1(input []string) int {
 				wins++
 			}
 		}
-		if total == 0 {
-			total = wins
-		} else {
-			total *= wins
-		}
+		total *= wins
 
 	}
 
@@ -71,22 +68,53 @@ func part1(input []string) int {
 
 func part2(input []string) int {
 	race := parse2(input)
-	fmt.Printf("Race: %#v\n", race)
 
-	total := 0
-	wins := 0
+	wins, total := 0, 1
 	for i := 1; i < race.time; i++ {
 		if i*(race.time-i) > race.distance {
 			wins++
 		}
 	}
-	if total == 0 {
-		total = wins
-	} else {
-		total *= wins
-	}
+	total *= wins
 
 	return total
+}
+
+func part2Optimised(input []string) int {
+	race := parse2(input)
+
+	// hold x, mv time-x = d
+
+	// x * (t-x) > d
+	// (x * (t-x) - d = 0)
+	// x = -(sqrt(t^2-4*d)-t)/2, x = (sqrt(t^2-4*d)+t)/2
+	var a, b, c, discriminant float64
+
+	a = 1
+	b = float64(race.time)
+	c = float64(race.distance)
+
+	discriminant = (b * b) - (4 * a * c)
+
+	x0 := -(math.Sqrt(discriminant) - b) / (2 * a)
+	x1 := (math.Sqrt(discriminant) + b) / (2 * a)
+	// l0 := int(x0)
+	// l1 := l0 + 1
+	// r0 := int(x1)
+	// r1 := r0 + 1
+
+	// fmt.Printf("x0: %f\n", x0)
+	// fmt.Printf("x1: %f\n", x1)
+
+	// f := func(x int) int {
+	// 	return x*(race.time-x) - race.distance
+	// }
+
+	// fmt.Printf("solve for %d: %d\n", l0, f(l0))
+	// fmt.Printf("solve for %d: %d\n", l1, f(l1))
+	// fmt.Printf("solve for %d: %d\n", r0, f(r0))
+	// fmt.Printf("solve for %d: %d\n", r1, f(r1))
+	return int(x1) - int(x0)
 }
 
 func main() {
@@ -95,4 +123,5 @@ func main() {
 
 	fmt.Println("Part 1:", part1(input))
 	fmt.Println("Part 2:", part2(input))
+	fmt.Println("Part 2:", part2Optimised(input))
 }
