@@ -29,11 +29,12 @@ const (
 	FIVEOFKIND
 )
 
-var cardValues = map[rune]int{'2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, 'T': 10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14}
-var cardValuesJoker = map[rune]int{'J': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, 'T': 10, 'Q': 11, 'K': 12, 'A': 13}
+var (
+	cardValues      = map[rune]int{'2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, 'T': 10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14}
+	cardValuesJoker = map[rune]int{'J': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, 'T': 10, 'Q': 11, 'K': 12, 'A': 13}
+)
 
-func parseType(in string, joker bool) int {
-	h := []rune(in)
+func parseType(h string, joker bool) int {
 	counts := make(map[rune]int)
 
 	for _, r := range h {
@@ -55,13 +56,13 @@ func parseType(in string, joker bool) int {
 			}
 		}
 		return FULLHOUSE
-	case 3: // TWOPAIR or THREEOFKIND // 22334, 22234,
+	case 3:
 		for _, c := range counts {
-			if c == 3 {
-				if joker && j > 0 { // 2233J -> 22333
-					return FOUROFKIND
+			if c == 3 { // 23444, 22444
+				if joker && j > 0 {
+					return FOUROFKIND // 2J444 -> 24444, 22JJ3 -> 22223, 23JJJ -> 23333
 				}
-				return THREEOFKIND
+				return THREEOFKIND // 22234
 			}
 		}
 		if joker && j > 1 { // JJ233 -> 33233
@@ -84,6 +85,64 @@ func parseType(in string, joker bool) int {
 	return 0
 }
 
+func optimalCard(counts map[rune]int) rune {
+	var maxCount int
+	var card rune
+	for r, count := range counts {
+		if count >= maxCount {
+			maxCount = count
+			card = r
+		}
+	}
+
+	return card
+}
+
+func parseTypeOptimised(h string, joker bool) int {
+	counts := make(map[rune]int)
+
+	for _, r := range h {
+		counts[r]++
+	}
+
+	if joker {
+		j := counts['J']
+		if j > 0 {
+			delete(counts, 'J')
+			counts[optimalCard(counts)] += j
+		}
+
+	}
+
+	// counts
+	// len 1
+	// AAAAA [A: 5] -> 1 (length of counts) -> FIVEOFKIND
+	// len 2
+	// 2222A -> [2: 4, A: 1] -> 2 -> FOUROFKIND
+	// 222AA -> [2: 3, A: 2] -> 2 -> FULLHOUSE
+	// len 3
+	// 22334 -> [2: 2, 3: 2, 4: 1] -> TWOPAIR
+	// 23444 -> [2: 1, 3: 1, 4: 3] -> THREEOFKIND
+	// len 4
+	// 23455 -> [2: 1, 3: 1, 4: 1, 5: 2] -> ONEPAIR
+	// len 5
+	// 23456 -> HIGHCARD
+	strength := map[int]int{1: FIVEOFKIND, 2: FULLHOUSE, 3: TWOPAIR, 4: ONEPAIR, 5: HIGHCARD}
+
+	for _, c := range counts {
+		if c == 4 {
+			strength[2] = FOUROFKIND
+		}
+
+		if c == 3 {
+			strength[3] = THREEOFKIND
+		}
+	}
+
+	return strength[len(counts)]
+
+}
+
 func parseHands(in []string, joker bool) []hand {
 
 	var hands []hand
@@ -92,7 +151,8 @@ func parseHands(in []string, joker bool) []hand {
 		parts := strings.Fields(line)
 		v := parts[0]
 		bid, _ := strconv.Atoi(parts[1])
-		typ := parseType(parts[0], joker)
+		// typ := parseType(parts[0], joker)
+		typ := parseTypeOptimised(parts[0], joker)
 
 		hands = append(hands, hand{
 			v:   v,
@@ -143,7 +203,7 @@ func part1(input []string) int {
 	total := 0
 	for i, h := range hands {
 		rank := i + 1
-		total += (h.bid * rank)
+		total += h.bid * rank
 	}
 
 	return total
@@ -157,7 +217,7 @@ func part2(input []string) int {
 	total := 0
 	for i, h := range hands {
 		rank := i + 1
-		total += (h.bid * rank)
+		total += h.bid * rank
 	}
 
 	return total
