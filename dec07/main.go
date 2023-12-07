@@ -170,9 +170,3 @@ func main() {
 	fmt.Println("Part 1:", part1(input))
 	fmt.Println("Part 2:", part2(input))
 }
-
-// 251287184 too high
-// 250005367 too low
-// 249797187
-// 249884506
-// 249884049
