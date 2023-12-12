@@ -18,7 +18,7 @@ type record struct {
 	sizes []int
 }
 
-func parseRecords(in []string) []record {
+func parseRecords(in []string, factor int) []record {
 	var records []record
 
 	for _, line := range in {
@@ -30,7 +30,15 @@ func parseRecords(in []string) []record {
 			n, _ := strconv.Atoi(s)
 			sizes = append(sizes, n)
 		}
-		records = append(records, record{rawRecord, sizes})
+
+		var unfoldedRecs []string
+		var unfoldedSizes []int
+		for i := 0; i < factor; i++ {
+			unfoldedRecs = append(unfoldedRecs, rawRecord)
+			unfoldedSizes = append(unfoldedSizes, sizes...)
+		}
+		rec := strings.Join(unfoldedRecs, "?")
+		records = append(records, record{rec, unfoldedSizes})
 	}
 
 	return records
@@ -100,7 +108,7 @@ func findCombos(r record) int {
 
 func part1(input []string) int {
 
-	records := parseRecords(input)
+	records := parseRecords(input, 1)
 	for _, r := range records {
 		fmt.Printf("Records: %s, sizes: %#v\n", r.v, r.sizes)
 	}
@@ -115,6 +123,12 @@ func part1(input []string) int {
 }
 
 func part2(input []string) int {
+	records := parseRecords(input, 5)
+	for _, r := range records {
+		fmt.Printf("Records: %s, sizes: %#v\n", r.v, r.sizes)
+	}
+
+	//TODO - dynamic programming
 
 	return 0
 }
