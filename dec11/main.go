@@ -12,10 +12,6 @@ func parseInput() []string {
 	return strings.Split(strings.Trim(string(raw), "\n"), "\n")
 }
 
-// type node struct {
-// 	v rune
-// }
-
 type point struct {
 	x, y int
 }
@@ -39,7 +35,6 @@ func (e edge) String() string {
 
 type graph struct {
 	nodes map[point]struct{}
-	// edges map[point]map[edge]struct{}
 	edges map[string]*edge
 }
 
@@ -107,8 +102,6 @@ func expandColumns(rows []string) []string {
 			emptyColumns = append(emptyColumns, x)
 		}
 	}
-
-	// fmt.Printf("Empty column indices: %#v\n", emptyColumns)
 
 	// expand columns
 	var expanded []string
