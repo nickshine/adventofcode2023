@@ -1,0 +1,4 @@
+github.com/schwarmco/go-cartesian-product v0.0.0-20230921023625-e02d1c150053 h1:h7EwPM2KjupG0zVAG+EYxbR2cHnbiP1d4DTAZ+G09LY=
+github.com/schwarmco/go-cartesian-product v0.0.0-20230921023625-e02d1c150053/go.mod h1:/TRiIlxvQQAtfnBXEqqbnYBYPmE6XT5iZxSx+hJ9zGw=
+gonum.org/v1/gonum v0.14.0 h1:2NiG67LD1tEH0D7kM+ps2V+fXmsAnpUeec7n8tcr4S0=
+gonum.org/v1/gonum v0.14.0/go.mod h1:AoWeoz0becf9QMWtE8iWXNXc27fK4fNeHNf/oMejGfU=
