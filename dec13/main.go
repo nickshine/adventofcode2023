@@ -69,13 +69,8 @@ func solve(input []string, smudges int) int {
 
 	s := 0
 	for _, pattern := range patterns {
-		hv := fold(pattern, smudges)
-		if hv > 0 {
-			s += (hv * 100)
-		}
-
-		vv := fold(rotate(pattern), smudges)
-		s += vv
+		s += fold(pattern, smudges) * 100
+		s += fold(rotate(pattern), smudges)
 	}
 
 	return s
