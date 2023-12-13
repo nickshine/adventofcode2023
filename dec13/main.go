@@ -22,30 +22,7 @@ func parsePatterns(strPatterns []string) [][]string {
 	return patterns
 }
 
-func foldHorizontal(pattern []string) int {
-OUTER:
-	for i := 0; i < len(pattern)-1; i++ {
-		// fmt.Printf("Checking row %d:\n", i)
-		// fold from inside outwards
-		for a, b := i, i+1; a >= 0 && b < len(pattern); a, b = a-1, b+1 {
-
-			if pattern[a] != pattern[b] {
-				// fmt.Printf("row %d DOES NOT mirror row %d\n", a, b) // move on to next fold point
-				// fmt.Printf("  %s\n  %s\n", pattern[a], pattern[b])
-				continue OUTER
-			} else {
-				fmt.Printf("row %d matches row %d\n", a, b)
-			}
-		}
-
-		// fmt.Printf("All rows have matched for index %d\n", i)
-		return i + 1
-	}
-
-	return 0
-}
-
-func foldVertical(pattern []string) int {
+func rotate(pattern []string) []string {
 
 	transposed := make([][]byte, len(pattern[0]))
 
@@ -61,37 +38,53 @@ func foldVertical(pattern []string) int {
 		input[i] = string(row)
 	}
 
-	return foldHorizontal(input)
+	return input
 }
 
-func part1(input []string) int {
+func fold(pattern []string, smudges int) int {
+	for i := 0; i < len(pattern)-1; i++ {
+		// fold from inside outwards
+		diff := 0
+		for a, b := i, i+1; a >= 0 && b < len(pattern); a, b = a-1, b+1 {
+
+			// check each character
+			for x := 0; x < len(pattern[a]); x++ {
+				if pattern[a][x] != pattern[b][x] {
+					diff++
+				}
+			}
+		}
+
+		if diff == smudges {
+			return i + 1
+		}
+	}
+
+	return 0
+}
+
+func solve(input []string, smudges int) int {
 
 	patterns := parsePatterns(input)
 
-	sh := 0
+	s := 0
 	for _, pattern := range patterns {
-		fmt.Printf("Looking for folds on pattern:\n%s\n", pattern)
-		hv := foldHorizontal(pattern)
+		hv := fold(pattern, smudges)
 		if hv > 0 {
-			sh += (hv * 100)
+			s += (hv * 100)
 		}
 
-		vv := foldVertical(pattern)
-		sh += vv
+		vv := fold(rotate(pattern), smudges)
+		s += vv
 	}
 
-	return sh
-}
-
-func part2(input []string) int {
-
-	return 0
+	return s
 }
 
 func main() {
 
 	input := parseInput()
 
-	fmt.Println("Part 1:", part1(input))
-	fmt.Println("Part 2:", part2(input))
+	fmt.Println("Part 1:", solve(input, 0))
+	fmt.Println("Part 2:", solve(input, 1))
 }
