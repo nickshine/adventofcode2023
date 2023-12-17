@@ -103,7 +103,7 @@ func parseGrid(input []string) [][]int {
 }
 
 // choices filters the available next path steps based on current direction and move count.
-func choices(g grid, cur *node, lossMap map[state]int, minMv, maxMv int) []*node {
+func choices(g grid, cur *node, states map[state]int, minMv, maxMv int) []*node {
 	var choices []*node
 
 	x, y := cur.state.loc.x, cur.state.loc.y
@@ -133,11 +133,11 @@ func choices(g grid, cur *node, lossMap map[state]int, minMv, maxMv int) []*node
 		nextState := state{loc: point{nx, ny}, d: d, mv: nextMv}
 		nextLoss := g[ny][nx]
 		// if next loc is visited with the exact same direction and mv count, and it has a lower loss, abandon this path
-		if nsl, ok := lossMap[nextState]; ok && nsl <= cur.loss+nextLoss {
+		if loss, ok := states[nextState]; ok && loss <= cur.loss+nextLoss {
 			continue
 		}
 
-		lossMap[nextState] = cur.loss + nextLoss
+		states[nextState] = cur.loss + nextLoss
 		choices = append(choices, &node{state: nextState, loss: cur.loss + nextLoss})
 	}
 
@@ -155,13 +155,13 @@ func dijkstra(g grid, start, end point, minMv, maxMv int) int {
 	}
 
 	// map of states to minimum loss
-	lossMap := map[state]int{start1: 0, start2: 0}
+	states := map[state]int{start1: 0, start2: 0}
 	heap.Init(&queue)
 
 	for len(queue) > 0 {
 		cur := heap.Pop(&queue).(*node)
 		// abandon path if there is already a lower loss path
-		if lossMap[cur.state] < cur.loss {
+		if states[cur.state] < cur.loss {
 			continue
 		}
 
@@ -170,7 +170,7 @@ func dijkstra(g grid, start, end point, minMv, maxMv int) int {
 			return cur.loss
 		}
 
-		for _, c := range choices(g, cur, lossMap, minMv, maxMv) {
+		for _, c := range choices(g, cur, states, minMv, maxMv) {
 			heap.Push(&queue, c)
 		}
 	}
