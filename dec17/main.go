@@ -28,9 +28,9 @@ type node struct {
 }
 
 type state struct {
-	p  point
-	d  direction
-	mv int
+	loc point
+	d   direction
+	mv  int
 }
 
 type direction point
@@ -78,56 +78,66 @@ func (q *queue) Pop() any {
 	return item
 }
 
-func parseGrid(input []string) [][]node {
-	var grid [][]node
+type grid [][]int
+
+func (g grid) inbounds(x, y int) bool {
+	if len(g) == 0 {
+		return false
+	}
+
+	return x >= 0 && x < len(g[0]) && y >= 0 && y < len(g)
+}
+
+func parseGrid(input []string) [][]int {
+	var grid [][]int
 
 	for y, row := range input {
-		grid = append(grid, make([]node, len(row)))
+		grid = append(grid, make([]int, len(row)))
 		for x, c := range row {
 			n, _ := strconv.Atoi(string(c))
-			grid[y][x] = node{loss: n}
+			grid[y][x] = n
 		}
 	}
 
 	return grid
 }
 
-func choices(g [][]node, cur *node, lm map[state]int, minMv, maxMv int) []*node {
+// choices filters the available next path steps based on current direction and move count.
+func choices(g grid, cur *node, lossMap map[state]int, minMv, maxMv int) []*node {
 	var choices []*node
 
-	x, y := cur.state.p.x, cur.state.p.y
+	x, y := cur.state.loc.x, cur.state.loc.y
 
 	for _, d := range directions {
-		if x+d.x < 0 || x+d.x >= len(g[0]) || y+d.y < 0 || y+d.y >= len(g) { // out of bounds
+		if !g.inbounds(x+d.x, y+d.y) {
 			continue
 		}
 
-		// if we can no longer travel in the same direction and d is not a valid turn, continue
+		// if we can no longer travel in direction d, or d is not a valid turn, continue
 		if cur.state.mv == maxMv && !slices.Contains(turns[cur.state.d], d) || opposites[cur.state.d] == d {
+			continue
+		}
+
+		// must travel minMv steps in same direction before turning
+		if d != cur.state.d && cur.state.mv < minMv {
 			continue
 		}
 
 		nx, ny := x+d.x, y+d.y
 
-		var nextMv int
-
-		if d != cur.state.d {
-			if cur.state.mv < minMv {
-				continue // must travel in same direction if < minMv
-			}
-			nextMv = 1 // start over moves when turning
-		} else {
+		nextMv := 1 // assumes a turn - start over moves when turning
+		if d == cur.state.d {
 			nextMv = cur.state.mv%maxMv + 1
 		}
 
-		nextState := state{p: point{nx, ny}, d: d, mv: nextMv}
-		nextLoss := g[ny][nx].loss
-		// if we've already been to the next point with the exact same direction and mv count, and it has a lower loss, abandon this path
-		if ns, ok := lm[nextState]; ok && ns <= cur.loss+nextLoss {
+		nextState := state{loc: point{nx, ny}, d: d, mv: nextMv}
+		nextLoss := g[ny][nx]
+		// if next loc is visited with the exact same direction and mv count, and it has a lower loss, abandon this path
+		if nsl, ok := lossMap[nextState]; ok && nsl <= cur.loss+nextLoss {
 			continue
 		}
 
-		lm[nextState] = cur.loss + nextLoss
+		lossMap[nextState] = cur.loss + nextLoss
 		choices = append(choices, &node{state: nextState, loss: cur.loss + nextLoss})
 	}
 
@@ -135,9 +145,9 @@ func choices(g [][]node, cur *node, lm map[state]int, minMv, maxMv int) []*node 
 
 }
 
-func dijkstra(g [][]node, start, end point, minMv, maxMv int) int {
-	start1 := state{p: start, d: RIGHT, mv: 0}
-	start2 := state{p: start, d: DOWN, mv: 0}
+func dijkstra(g grid, start, end point, minMv, maxMv int) int {
+	start1 := state{loc: start, d: RIGHT, mv: 0}
+	start2 := state{loc: start, d: DOWN, mv: 0}
 
 	queue := queue{
 		&node{loss: 0, state: start1},
@@ -156,7 +166,7 @@ func dijkstra(g [][]node, start, end point, minMv, maxMv int) int {
 		}
 
 		// if at end and able to stop
-		if cur.state.p == end && cur.state.mv >= minMv {
+		if cur.state.loc == end && cur.state.mv >= minMv {
 			return cur.loss
 		}
 
@@ -179,6 +189,7 @@ func part1(input []string) int {
 
 func part2(input []string) int {
 	grid := parseGrid(input)
+
 	start := point{0, 0}
 	end := point{len(grid) - 1, len(grid[0]) - 1}
 	weight := dijkstra(grid, start, end, 4, 10)
