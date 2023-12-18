@@ -25,25 +25,8 @@ var (
 	RIGHT = direction{1, 0}
 )
 
-type grid [][]rune
-
-func (g grid) String() string {
-	var sb strings.Builder
-	sb.WriteString("\t0123456789012345678901234\n")
-	for y := 0; y < len(g); y++ {
-		sb.WriteString(fmt.Sprintf("%d\t", y))
-		for x := 0; x < len(g[0]); x++ {
-			sb.WriteRune(g[y][x])
-		}
-		sb.WriteRune('\n')
-	}
-	sb.WriteString("\t0123456789012345678901234\n")
-	return sb.String()
-}
-
 func parseDirection(d string) direction {
 	if len(d) != 1 {
-		fmt.Printf("D: %s\n", d)
 		panic("invalid input")
 	}
 
