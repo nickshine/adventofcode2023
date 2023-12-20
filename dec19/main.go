@@ -53,6 +53,8 @@ type rule struct {
 	category rune // x, m, a, s
 	dest     string
 	op       func(n int) bool
+	operator rune
+	value    int
 }
 
 func (r rule) String() string {
@@ -64,7 +66,6 @@ func parseRules(rawRules []string) []rule {
 	for _, r := range rawRules {
 		ruleParts := strings.Split(r, ":")
 		if len(ruleParts) == 1 {
-			fmt.Printf("  standalone rule %s\n", ruleParts[0])
 			rules = append(rules, rule{dest: ruleParts[0]})
 			continue
 		}
@@ -76,19 +77,22 @@ func parseRules(rawRules []string) []rule {
 		operator := matches[2] // < or >
 		right := matches[3]
 		value, _ := strconv.Atoi(right)
-		fmt.Printf("  left: %s, op: %s, right: %s, dest: %s\n", left, operator, right, dest)
 
 		var fn func(n int) bool
+		var op rune
 
 		switch operator {
 		case "<":
 			fn = func(n int) bool {
 				return n < value
 			}
+			op = '<'
 		case ">":
 			fn = func(n int) bool {
 				return n > value
 			}
+			op = '>'
+
 		default:
 			panic("invalid input")
 		}
@@ -97,6 +101,8 @@ func parseRules(rawRules []string) []rule {
 			category: rune(left[0]),
 			op:       fn,
 			dest:     dest,
+			value:    value,
+			operator: op,
 		}
 
 		rules = append(rules, newRule)
@@ -113,7 +119,6 @@ func parseWorkflows(workflows []string) map[string][]rule {
 		parts := workflowRE.FindStringSubmatch(line)
 		name := parts[1]
 		rawRules := strings.Split(parts[2], ",")
-		fmt.Printf("name: %s\n", name)
 		rules := parseRules(rawRules)
 		flows[name] = rules
 	}
@@ -170,13 +175,6 @@ func part1(workflows []string, ratings []string) int {
 	flows := parseWorkflows(workflows)
 	parts := parseRatings(ratings)
 
-	// for flow, rules := range flows {
-	// 	fmt.Printf("workflow: %s\n", flow)
-	// 	for i, rule := range rules {
-	// 		fmt.Printf("  rule %d - %s\n", i, rule)
-	// 	}
-	// }
-
 	sum := 0
 	for _, p := range parts {
 		if process(flows, "in", p) {
@@ -187,9 +185,75 @@ func part1(workflows []string, ratings []string) int {
 	return sum
 }
 
+func copyMap(in map[rune][2]int) map[rune][2]int {
+
+	cp := make(map[rune][2]int)
+
+	for k, v := range in {
+		var vv [2]int
+		copy(vv[:], v[:])
+		cp[k] = vv
+	}
+
+	return cp
+}
+
+func processCombos(flows map[string][]rule, flowName string, ranges map[rune][2]int) int {
+	if flowName == "R" {
+		return 0
+	} else if flowName == "A" { // return the product of ranges
+		product := 1
+		for _, minMax := range ranges {
+			product *= (minMax[1] - minMax[0] + 1)
+		}
+		return product
+	}
+
+	var total int
+	rules := flows[flowName]
+	for _, rule := range rules {
+		if rule.op != nil {
+			minMax := ranges[rule.category]
+			newRanges := copyMap(ranges)
+			newMinMax := newRanges[rule.category]
+
+			switch rule.operator {
+			case '<':
+				newMinMax[1] = rule.value - 1 // set max to < value (successful range)
+				minMax[0] = rule.value        // set min to value (non-successful range)
+
+			case '>':
+				newMinMax[0] = rule.value + 1 // set min to > value (successful range)
+				minMax[1] = rule.value        //set max to value (non-successful range)
+			default:
+				panic("invalid input")
+			}
+
+			ranges[rule.category] = minMax
+			newRanges[rule.category] = newMinMax
+
+			total += processCombos(flows, rule.dest, newRanges) // (successful)
+			continue                                            // continue to next rule (non-successful)
+		}
+
+		// process standalone rule
+		total += processCombos(flows, rule.dest, ranges)
+	}
+
+	return total
+}
+
 func part2(workflows []string, ratings []string) int {
 
-	return 0
+	flows := parseWorkflows(workflows)
+	categories := map[rune][2]int{
+		'x': {1, 4000},
+		'm': {1, 4000},
+		'a': {1, 4000},
+		's': {1, 4000},
+	}
+
+	return processCombos(flows, "in", categories)
 }
 
 func main() {
@@ -198,3 +262,6 @@ func main() {
 	fmt.Println("Part 1:", part1(workflows, ratings))
 	fmt.Println("Part 2:", part2(workflows, ratings))
 }
+
+// 2304000000000000
+//  167409079868000
