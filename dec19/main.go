@@ -138,12 +138,10 @@ func process(flows map[string][]rule, flowName string, p part) bool {
 			if p.rating(rule.category) < rule.value {
 				return process(flows, rule.dest, p)
 			}
-			continue
 		case '>':
 			if p.rating(rule.category) > rule.value {
 				return process(flows, rule.dest, p)
 			}
-			continue
 		default: // standalone rule
 			return process(flows, rule.dest, p)
 		}
@@ -217,15 +215,8 @@ func processCombos(flows map[string][]rule, flowName string, ranges map[rune][2]
 }
 
 func part2(workflows []string, ratings []string) int {
-
 	flows := parseWorkflows(workflows)
-	categories := map[rune][2]int{
-		'x': {1, 4000},
-		'm': {1, 4000},
-		'a': {1, 4000},
-		's': {1, 4000},
-	}
-
+	categories := map[rune][2]int{'x': {1, 4000}, 'm': {1, 4000}, 'a': {1, 4000}, 's': {1, 4000}}
 	return processCombos(flows, "in", categories)
 }
 
