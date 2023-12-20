@@ -52,7 +52,6 @@ func (p part) rating(category rune) int {
 type rule struct {
 	category rune // x, m, a, s
 	dest     string
-	op       func(n int) bool
 	operator rune
 	value    int
 }
@@ -78,31 +77,11 @@ func parseRules(rawRules []string) []rule {
 		right := matches[3]
 		value, _ := strconv.Atoi(right)
 
-		var fn func(n int) bool
-		var op rune
-
-		switch operator {
-		case "<":
-			fn = func(n int) bool {
-				return n < value
-			}
-			op = '<'
-		case ">":
-			fn = func(n int) bool {
-				return n > value
-			}
-			op = '>'
-
-		default:
-			panic("invalid input")
-		}
-
 		newRule := rule{
 			category: rune(left[0]),
-			op:       fn,
 			dest:     dest,
 			value:    value,
-			operator: op,
+			operator: rune(operator[0]),
 		}
 
 		rules = append(rules, newRule)
@@ -154,17 +133,20 @@ func process(flows map[string][]rule, flowName string, p part) bool {
 	rules := flows[flowName]
 
 	for _, rule := range rules {
-		if rule.op != nil {
-			// if condition satisfied, go to dest
-			if rule.op(p.rating(rule.category)) {
+		switch rule.operator {
+		case '<':
+			if p.rating(rule.category) < rule.value {
 				return process(flows, rule.dest, p)
 			}
-			// otherwise, go to next rule
 			continue
+		case '>':
+			if p.rating(rule.category) > rule.value {
+				return process(flows, rule.dest, p)
+			}
+			continue
+		default: // standalone rule
+			return process(flows, rule.dest, p)
 		}
-
-		// standalone rule (no condition)
-		return process(flows, rule.dest, p)
 	}
 
 	return false
@@ -186,13 +168,9 @@ func part1(workflows []string, ratings []string) int {
 }
 
 func copyMap(in map[rune][2]int) map[rune][2]int {
-
 	cp := make(map[rune][2]int)
-
 	for k, v := range in {
-		var vv [2]int
-		copy(vv[:], v[:])
-		cp[k] = vv
+		cp[k] = v
 	}
 
 	return cp
@@ -212,32 +190,27 @@ func processCombos(flows map[string][]rule, flowName string, ranges map[rune][2]
 	var total int
 	rules := flows[flowName]
 	for _, rule := range rules {
-		if rule.op != nil {
-			minMax := ranges[rule.category]
-			newRanges := copyMap(ranges)
-			newMinMax := newRanges[rule.category]
 
-			switch rule.operator {
-			case '<':
-				newMinMax[1] = rule.value - 1 // set max to < value (successful range)
-				minMax[0] = rule.value        // set min to value (non-successful range)
+		minMax := ranges[rule.category]
+		newRanges := copyMap(ranges)
+		newMinMax := minMax
+		switch rule.operator {
+		case '<':
+			newMinMax[1] = rule.value - 1 // set max to < value (successful range)
+			minMax[0] = rule.value        // set min to value (non-successful range)
 
-			case '>':
-				newMinMax[0] = rule.value + 1 // set min to > value (successful range)
-				minMax[1] = rule.value        //set max to value (non-successful range)
-			default:
-				panic("invalid input")
-			}
+		case '>':
+			newMinMax[0] = rule.value + 1 // set min to > value (successful range)
+			minMax[1] = rule.value        //set max to value (non-successful range)
 
-			ranges[rule.category] = minMax
-			newRanges[rule.category] = newMinMax
-
-			total += processCombos(flows, rule.dest, newRanges) // (successful)
-			continue                                            // continue to next rule (non-successful)
+		default: // standalone rule
+			total += processCombos(flows, rule.dest, ranges)
+			continue
 		}
 
-		// process standalone rule
-		total += processCombos(flows, rule.dest, ranges)
+		ranges[rule.category] = minMax
+		newRanges[rule.category] = newMinMax
+		total += processCombos(flows, rule.dest, newRanges) // (successful)
 	}
 
 	return total
@@ -262,6 +235,3 @@ func main() {
 	fmt.Println("Part 1:", part1(workflows, ratings))
 	fmt.Println("Part 2:", part2(workflows, ratings))
 }
-
-// 2304000000000000
-//  167409079868000
