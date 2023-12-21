@@ -118,12 +118,14 @@ OUTER:
 			}
 			queue = queue[1:]
 
-			// manually inspected input to see all inputs to rx inv
-			// cl -> lx
-			// rp -> lx   -> rx
-			// lb -> lx
-			// nj -> lx
+			// manually inspected input to see all inputs to rx
+			// cl
+			// rp -> lx  -> rx
+			// lb
+			// nj
 
+			// cl, rp, lb, nj are single input conjunctions, so they send send HIGH to lx when receiving a LOW
+			// lx will in turn send a LOW to rx if it receives all 4 inputs as HIGH
 			// if any of these modules hit, a cycle has occurred
 			if slices.Contains([]string{"cl", "rp", "lb", "nj"}, cur.to.name) && cur.pulse == LOW {
 				cycles = append(cycles, i+1)
