@@ -63,12 +63,10 @@ func part1(grid []string, start, end point) int {
 		if p == end {
 			return step
 		}
-
 		seen[p] = struct{}{}
-
 		dirs := directions[rune(grid[p.y][p.x])]
 
-		maxDepth := step
+		maxDepth := -1
 		for _, d := range dirs {
 			x, y := p.x+d[0], p.y+d[1]
 
@@ -88,7 +86,6 @@ func part1(grid []string, start, end point) int {
 		}
 
 		delete(seen, p)
-
 		return maxDepth
 	}
 
@@ -135,10 +132,7 @@ func (g *graph) removePoint(p point) {
 
 	// undirected
 	for _, pp := range points {
-		edges, ok := g.edges[pp]
-		if !ok {
-			panic("no edges for point")
-		}
+		edges := g.edges[pp]
 
 		for e := range edges {
 			if e.to == p {
@@ -220,7 +214,6 @@ func part2(grid []string, start, end point) int {
 		}
 
 		seen[p] = struct{}{}
-
 		maxDepth := -1
 		for e := range g.edges[p] {
 
@@ -231,8 +224,8 @@ func part2(grid []string, start, end point) int {
 
 			maxDepth = max(maxDepth, dfs(next, step+e.weight, seen))
 		}
-		delete(seen, p)
 
+		delete(seen, p)
 		return maxDepth
 	}
 
