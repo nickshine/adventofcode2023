@@ -133,7 +133,6 @@ func findClusters(g *graph) [][]string {
 }
 
 func part1(in []string) int {
-
 	g := newGraph(in)
 	gg := &graph{nodes: make(map[string]map[edge]struct{})}
 
@@ -160,16 +159,11 @@ func part1(in []string) int {
 	}
 
 	clusters := findClusters(gg)
-	if len(clusters) == 2 {
-		fmt.Printf("Clusters: %+v\n", clusters)
-		return len(clusters[0]) * len(clusters[1])
-	}
-
-	return 0
+	fmt.Printf("Clusters: %+v\n", clusters)
+	return len(clusters[0]) * len(clusters[1])
 }
 
 func part2(in []string) int {
-
 	return 0
 }
 
